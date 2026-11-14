@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#087f62">
+<title>نوبت‌یار | پنل مدیر</title>
+<style>
+:root{--g:#087f62;--g2:#e8f4ef;--bg:#f3f7f5;--ink:#18352d;--muted:#687b75;--line:#dce7e2;--red:#a33b32}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif}
+header{background:var(--g);color:#fff;padding:20px 17px 25px;border-radius:0 0 22px 22px}
+header h1{margin:0 0 6px;font-size:25px}header p{margin:0;font-size:12px;opacity:.9}
+main{max-width:780px;margin:16px auto;padding:0 13px 35px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
+h2{font-size:17px;margin:0 0 13px}.small{font-size:11px;color:var(--muted);line-height:1.9}
+label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;background:white;font:inherit;font-size:14px;color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;border-radius:10px;background:var(--g);color:white;padding:12px 14px;font:inherit;font-size:13px;font-weight:bold;cursor:pointer}
+button.alt{background:var(--g2);color:var(--g)}button.danger{background:#fbecea;color:var(--red)}
+button:disabled{opacity:.5}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row button{flex:1}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}
+.tabs button{padding:11px 5px}.tabs button.active{background:#064f3e}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:#f5faf7;border-radius:12px;padding:11px}.stat b{display:block;color:var(--g);font-size:21px}.stat span{font-size:10px;color:var(--muted)}
+.entry{border-top:1px solid var(--line);padding:12px 0}.entry:first-child{border-top:0}
+.entry strong{font-size:14px}.meta{font-size:11px;color:var(--muted);line-height:1.9;margin-top:5px}
+.pill{display:inline-block;border-radius:30px;padding:4px 8px;background:#fff3d5;color:#765512;font-size:10px}
+.notice{padding:10px;border-radius:10px;background:#fff8e8;border:1px solid #f0dfb5;color:#735a21;font-size:11px;line-height:1.9;margin-top:12px}
+.hidden{display:none!important}.empty{font-size:12px;color:var(--muted);padding:8px 0}
+footer{text-align:center;color:var(--muted);font-size:10px;padding:15px}
+@media(max-width:440px){.grid{grid-template-columns:1fr}.tabs{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header><h1>نوبت‌یار</h1><p>نسخه آزمایشی ۳ · پنل مدیریت متمرکز نوبت‌ها</p></header>
+<main>
+<section id="setup" class="card hidden">
+ <h2>راه‌اندازی مدیر</h2>
+ <p class="small">برای این نمونه روی همین گوشی یک رمز محلی انتخاب کن. این رمز جایگزین ورود امن سمت سرور نیست و اطلاعات را در برابر دسترسی فنی به گوشی محافظت کامل نمی‌کند.</p>
+ <label>رمز مدیر (حداقل ۶ نویسه)</label><input id="newPass" type="password" minlength="6" autocomplete="new-password">
+ <label>تکرار رمز</label><input id="confirmPass" type="password" autocomplete="new-password">
+ <div class="row" style="margin-top:12px"><button onclick="setupAdmin()">ساخت پنل مدیر</button></div>
+ <div id="setupMsg" class="small"></div>
+</section>
+<section id="login" class="card hidden">
+ <h2>ورود مدیر</h2><label>رمز عبور</label><input id="pass" type="password" autocomplete="current-password">
+ <div class="row" style="margin-top:12px"><button onclick="login()">ورود</button></div><div id="loginMsg" class="small"></div>
+</section>
+<div id="app" class="hidden">
+ <section class="card">
+  <div class="stats">
+   <div class="stat"><b id="countAll">۰</b><span>کل درخواست‌ها</span></div>
+   <div class="stat"><b id="countWait">۰</b><span>در انتظار بررسی</span></div>
+   <div class="stat"><b id="countFound">۰</b><span>نوبت پیدا شده</span></div>
+  </div>
+  <div class="row" style="margin-top:12px"><button class="alt" onclick="logout()">خروج از پنل</button><button class="alt" onclick="exportData()">پشتیبان‌گیری اطلاعات</button></div>
+ </section>
+ <nav class="tabs">
+  <button class="active" data-tab="requests" onclick="tab('requests',this)">درخواست‌ها</button>
+  <button data-tab="add" onclick="tab('add',this)">ثبت مراجعه‌کننده</button>
+  <button data-tab="centers" onclick="tab('centers',this)">مراکز درمانی</button>
+  <button data-tab="settings" onclick="tab('settings',this)">تنظیمات</button>
+ </nav>
+ <section id="pane-requests" class="card">
+  <h2>درخواست‌های نوبت</h2><div id="requestList" class="empty">هنوز درخواستی ثبت نشده است.</div>
+ </section>
+ <section id="pane-add" class="card hidden">
+  <h2>ثبت درخواست جدید</h2>
+  <form id="requestForm">
+   <div class="grid"><div><label>نام مراجعه‌کننده</label><input id="person" required></div><div><label>شماره تماس</label><input id="phone" inputmode="tel" placeholder="مثلاً ۰۹۱۲..."></div></div>
+   <label>مرکز درمانی</label><select id="centerSelect"></select>
+   <div class="grid"><div><label>خدمت موردنیاز</label><select id="service"><option>پر کردن دندان</option><option>معاینه دندان‌پزشکی</option><option>داخلی</option><option>قلب</option><option>چشم‌پزشکی</option><option>سایر</option></select></div><div><label>تاریخ مطلوب</label><input id="wantedDate" type="date"></div></div>
+   <label>یادداشت (اختیاری؛ از ثبت جزئیات پزشکی خودداری کن)</label><textarea id="memo" placeholder="مثلاً ترجیح ساعت صبح"></textarea>
+   <div class="row" style="margin-top:12px"><button type="submit">ذخیره درخواست</button></div>
+  </form>
+ </section>
+ <section id="pane-centers" class="card hidden">
+  <h2>مدیریت مراکز درمانی</h2>
+  <label>نام مرکز</label><input id="centerName" placeholder="مثلاً بیمارستان ...">
+  <div class="grid"><div><label>شهر</label><input id="centerCity" placeholder="جوانرود"></div><div><label>نوع مرکز</label><select id="centerType"><option>درمانگاه</option><option>بیمارستان</option><option>مطب</option><option>مرکز تخصصی</option></select></div></div>
+  <div class="row" style="margin-top:12px"><button onclick="addCenter()">افزودن مرکز</button></div>
+  <div id="centerList" style="margin-top:12px"></div>
+ </section>
+ <section id="pane-settings" class="card hidden">
+  <h2>تنظیمات و پیامک</h2>
+  <p class="small">متن پیامک فقط پیش‌نمایش است. برای ارسال واقعی باید پنل پیامکی معتبر، تأیید مالک خط/حساب، سرور امن و اتصال API فراهم شود.</p>
+  <label>نام مدیر</label><input id="managerName" placeholder="مدیر نوبت‌یار">
+  <div class="row" style="margin-top:12px"><button onclick="saveSettings()">ذخیره تنظیمات</button><button class="danger" onclick="clearAll()">پاک‌کردن همه داده‌های این گوشی</button></div>
+  <div class="notice">این نسخه فقط روی همین مرورگر و همین گوشی ذخیره می‌کند. پاک‌کردن داده‌های مرورگر یا تعویض گوشی ممکن است اطلاعات را از بین ببرد؛ مرتب خروجی پشتیبان بگیر.</div>
+ </section>
+</div>
+<footer>نوبت‌یار · نمونه آزمایشی محلی · بدون اتصال به سامانه نوبت‌دهی یا پیامک واقعی</footer>
+</main>
+<script>
+const KEY='noobatyar_v3_local';
+let db={password:'',centers:[{name:'درمانگاه تأمین اجتماعی جوانرود',city:'جوانرود',type:'درمانگاه'}],requests:[],manager:'مدیر نوبت‌یار'};
+const $=id=>document.getElementById(id);
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&typeof x==='object')db={...db,...x}}catch(e){}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function show(id){['setup','login','app'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
+function init(){load();show(db.password?'login':'setup');render()}
+function setupAdmin(){let a=$('newPass').value,b=$('confirmPass').value;if(a.length<6){$('setupMsg').textContent='رمز باید دست‌کم ۶ نویسه باشد.';return}if(a!==b){$('setupMsg').textContent='تکرار رمز یکسان نیست.';return}db.password=a;save();$('newPass').value='';$('confirmPass').value='';show('login')}
+function login(){if($('pass').value===db.password){$('pass').value='';show('app');render()}else $('loginMsg').textContent='رمز صحیح نیست.'}
+function logout(){show('login')}
+function tab(name,btn){document.querySelectorAll('[id^=pane-]').forEach(x=>x.classList.add('hidden'));$('pane-'+name).classList.remove('hidden');document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');render()}
+const fa=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render(){
+ $('countAll').textContent=fa(db.requests.length);$('countWait').textContent=fa(db.requests.filter(x=>x.status==='در انتظار بررسی').length);$('countFound').textContent=fa(db.requests.filter(x=>x.status==='نوبت پیدا شد').length);
+ $('centerSelect').innerHTML=db.centers.map((c,i)=>`<option value="${i}">${esc(c.name)} ـ ${esc(c.city)}</option>`).join('');
+ $('centerList').innerHTML=db.centers.map((c,i)=>`<div class="entry"><strong>${esc(c.name)}</strong><div class="meta">${esc(c.type)} · ${esc(c.city)}</div>${db.centers.length>1?`<button class="danger" onclick="removeCenter(${i})">حذف مرکز</button>`:''}</div>`).join('');
+ $('requestList').innerHTML=db.requests.length?db.requests.map((r,i)=>`<div class="entry"><strong>${esc(r.person)}</strong> <span class="pill">${esc(r.status)}</span><div class="meta">${esc(r.center)}<br>${esc(r.service)} · ${esc(r.date||'تاریخ مشخص نشده')}<br>تماس: ${esc(r.phone||'ثبت نشده')}<br>${esc(r.memo||'')}</div><div class="row"><button class="alt" onclick="nextStatus(${i})">تغییر وضعیت</button><button class="alt" onclick="previewSms(${i})">پیش‌نمایش پیامک</button><button class="danger" onclick="removeRequest(${i})">حذف</button></div></div>`).join(''):'<div class="empty">هنوز درخواستی ثبت نشده است.</div>';
+ $('managerName').value=db.manager||'';
+}
+$('requestForm').addEventListener('submit',e=>{e.preventDefault();let c=db.centers[Number($('centerSelect').value)];db.requests.unshift({person:$('person').value.trim(),phone:$('phone').value.trim(),center:c.name+'، '+c.city,service:$('service').value,date:$('wantedDate').value,memo:$('memo').value.trim(),status:'در انتظار بررسی',created:new Date().toISOString()});save();e.target.reset();render();alert('درخواست در حافظه همین گوشی ذخیره شد.');tab('requests',document.querySelector('[data-tab="requests"]'))});
+function addCenter(){let name=$('centerName').value.trim(),city=$('centerCity').value.trim();if(!name||!city){alert('نام مرکز و شهر را وارد کن.');return}db.centers.push({name,city,type:$('centerType').value});save();$('centerName').value='';$('centerCity').value='';render()}
+function removeCenter(i){if(confirm('این مرکز از فهرست حذف شود؟ درخواست‌های قبلی باقی می‌مانند.')){db.centers.splice(i,1);save();render()}}
+function nextStatus(i){let s=db.requests[i].status;db.requests[i].status=s==='در انتظار بررسی'?'نوبت پیدا شد':s==='نوبت پیدا شد'?'نیازمند تأیید مدیر':'در انتظار بررسی';save();render()}
+function previewSms(i){let r=db.requests[i];alert('پیش‌نمایش پیامک (ارسال واقعی نیست)\\nسلام '+r.person+'، وضعیت درخواست '+r.service+' در '+r.center+': '+r.status+'. این پیام به معنی ثبت رسمی نوبت نیست.');}
+function removeRequest(i){if(confirm('درخواست حذف شود؟')){db.requests.splice(i,1);save();render()}}
+function saveSettings(){db.manager=$('managerName').value.trim()||'مدیر نوبت‌یار';save();alert('تنظیمات ذخیره شد.')}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='noobatyar-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function clearAll(){if(confirm('تمام اطلاعات ذخیره‌شده در این مرورگر پاک شود؟ این کار برگشت‌پذیر نیست.')){localStorage.removeItem(KEY);location.reload()}}
+init();
+</script>
+</body></html>
